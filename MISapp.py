@@ -7,7 +7,7 @@ from datetime import datetime
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 st.set_page_config(page_title="HT Meter TOD Patch MIS", layout="wide")
-st.title("📊 Meter Patch Daily MIS Dashboard")
+st.title("📊 HT Meter TOD Patch Daily MIS Dashboard")
 
 # Google Sheets authentication
 scope = ["https://www.googleapis.com/auth/spreadsheets"]
