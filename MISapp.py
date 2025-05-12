@@ -99,28 +99,21 @@ ax.set_xlabel('Date')
 ax.set_ylabel('Meters Patched')
 ax.set_title('Total Meters Patched Per Day')
 
-# Display the plot
-st.pyplot(fig)
-
-
 # 2. Bar charts for per-zone metrics (without "Meters Patched Today" section)
-fig, ax = plt.subplots(figsize=(8, 4))
+fig2, ax2 = plt.subplots(figsize=(8, 4))
 
 # Bar chart for Total Meters Patched
-ax.bar(final_summary['Zone'], final_summary['Total Meters Patched'], label='Total Meters Patched', color='skyblue')
+ax2.bar(final_summary['Zone'], final_summary['Total Meters Patched'], label='Total Meters Patched', color='skyblue')
 # Bar chart for Meters Pending
-ax.bar(final_summary['Zone'], final_summary['Meters Pending'], bottom=final_summary['Total Meters Patched'], label='Meters Pending', color='lightcoral')
+ax2.bar(final_summary['Zone'], final_summary['Meters Pending'], bottom=final_summary['Total Meters Patched'], label='Meters Pending', color='lightcoral')
 
 # Add labels and title
-ax.set_xlabel('Zone')
-ax.set_ylabel('Meters Count')
-ax.set_title('Meters Patched vs Pending by Zone')
+ax2.set_xlabel('Zone')
+ax2.set_ylabel('Meters Count')
+ax2.set_title('Meters Patched vs Pending by Zone')
 
 # Add legend to the left of the bar chart
-ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
-
-# Display the chart
-st.pyplot(fig)
+ax2.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 
 # Function to save the figure as an image and make it downloadable
 def save_fig_to_image(fig):
@@ -128,12 +121,11 @@ def save_fig_to_image(fig):
     img_buf = io.BytesIO()
     fig.savefig(img_buf, format="png", bbox_inches='tight')
     img_buf.seek(0)
-    img = Image.open(img_buf)
     return img_buf
 
-# Save the bar chart and line chart figures as images
+# Save the line chart and bar chart figures as images
 img_buf_line_chart = save_fig_to_image(fig)
-img_buf_bar_chart = save_fig_to_image(fig)
+img_buf_bar_chart = save_fig_to_image(fig2)
 
 # Provide a download button to download the image
 st.download_button(
