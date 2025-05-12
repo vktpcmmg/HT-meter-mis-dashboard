@@ -143,7 +143,7 @@ import io
 def save_summary_as_image(df):
     rows, cols = df.shape
     col_width = 3  # Increase column width
-    row_height = 0.6
+    row_height = 1
     fig_width = max(8, col_width * cols)
     fig_height = max(2, row_height * (rows + 1))
 
@@ -160,7 +160,7 @@ def save_summary_as_image(df):
     )
 
     table.auto_set_font_size(False)
-    table.set_fontsize(11)  # slightly larger font
+    table.set_fontsize(14)  # slightly larger font
     table.scale(1.2, 1.5)   # widen the cells a bit more
 
     # Style headers and borders
