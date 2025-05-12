@@ -141,16 +141,17 @@ import matplotlib.pyplot as plt
 import io
 
 def save_summary_as_image(df):
-    rows, cols = df.shape
-    col_width = 3  # Increase column width
-    row_height = 1.5
-    fig_width = max(8, col_width * cols)
-    fig_height = max(2, row_height * (rows + 1))
-
+    # Define fixed row height and column width
+    fixed_row_height = 0.6  # Fixed height for each row (you can adjust this)
+    fixed_col_width = 2.5   # Fixed width for each column (you can adjust this)
+    
+    fig_width = fixed_col_width * len(df.columns)  # Fixed figure width
+    fig_height = fixed_row_height * (len(df) + 1)  # Fixed figure height
+    
     fig, ax = plt.subplots(figsize=(fig_width, fig_height))
-    ax.axis('off')
+    ax.axis('off')  # Turn off axis
 
-    # Create table
+    # Create table with the cell text centered and fixed width
     table = ax.table(
         cellText=df.values,
         colLabels=df.columns,
@@ -159,25 +160,33 @@ def save_summary_as_image(df):
         edges='closed'
     )
 
+    # Set the font size
     table.auto_set_font_size(False)
-    table.set_fontsize(14)  # slightly larger font
-    table.scale(1.2, 1.5)   # widen the cells a bit more
+    table.set_fontsize(14)  # Font size (you can adjust this)
 
-    # Style headers and borders
+    # Style headers and cells
     for (row, col), cell in table.get_celld().items():
-        cell.set_edgecolor('black')
-        cell.set_linewidth(1.5)
-        cell.set_text_props(ha='center', va='center')
+        cell.set_edgecolor('black')  # Border color
+        cell.set_linewidth(1)  # Border thickness
+        cell.set_text_props(ha='center', va='center')  # Center align text
         if row == 0:
-            cell.get_text().set_fontweight('bold')
-            cell.set_facecolor('#f0f0f0')
+            cell.get_text().set_fontweight('bold')  # Bold the header
+            cell.set_facecolor('#f0f0f0')  # Light background for header
+
+        # Set fixed height for rows (for non-header rows)
+        if row != 0:
+            cell.set_height(fixed_row_height)
+
+        # Set fixed width for columns
+        cell.set_width(fixed_col_width)
 
     # Save image to buffer
     buf = io.BytesIO()
-    plt.savefig(buf, format="png", bbox_inches='tight')
+    plt.savefig(buf, format="png", bbox_inches='tight', dpi=300)  # Use higher dpi for clarity
     buf.seek(0)
     plt.close(fig)
     return buf
+
 
 
 
