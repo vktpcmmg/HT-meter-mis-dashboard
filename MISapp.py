@@ -137,15 +137,17 @@ ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 st.pyplot(fig)
 
 # ---------- Place this just after final_summary is created ----------
-def save_summary_as_image(df):
+def save_summary_as_image(df): 
     import matplotlib.pyplot as plt
     import io
 
     rows, cols = df.shape
-    col_width = 1.5     # Narrower columns
-    row_height = 1.2    # Taller rows
+    col_width = 1.5     # Keep column width narrow
+    row_height = 1.2    # Regular row height
+    header_extra_height = 0.6  # Add extra space for header
+
     fig_width = col_width * cols
-    fig_height = row_height * (rows + 1)
+    fig_height = row_height * rows + header_extra_height  # Add header height
 
     fig, ax = plt.subplots(figsize=(fig_width, fig_height), dpi=150)
     ax.axis('off')
@@ -161,7 +163,7 @@ def save_summary_as_image(df):
 
     table.auto_set_font_size(False)
     table.set_fontsize(12)
-    table.scale(1.0, 2.0)  # Columns normal, rows taller
+    table.scale(1.0, 2.0)  # Keep regular scaling for cells
 
     # Style cells
     for (row, col), cell in table.get_celld().items():
@@ -171,12 +173,14 @@ def save_summary_as_image(df):
         if row == 0:
             cell.get_text().set_fontweight('bold')
             cell.set_facecolor('#f0f0f0')
+            cell.set_height(cell.get_height() + header_extra_height / fig_height)  # increase only header height
 
     buf = io.BytesIO()
     plt.savefig(buf, format="png", bbox_inches='tight', dpi=150)
     buf.seek(0)
     plt.close(fig)
     return buf
+
 
 
 
