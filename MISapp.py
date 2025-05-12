@@ -78,6 +78,9 @@ st.subheader("📈 Progress Charts")
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
+
 # 1. Line chart for total patched per day (all zones)
 daily_total = df_daily.groupby('Date')['Meters Patched'].sum().reset_index()
 daily_total['Date'] = pd.to_datetime(daily_total['Date'])
@@ -85,8 +88,8 @@ daily_total['Date'] = pd.to_datetime(daily_total['Date'])
 # Line chart data
 line_chart_data = daily_total.set_index('Date')
 
-# Create a figure and axis using matplotlib for custom formatting
-fig, ax = plt.subplots()
+# Create a smaller figure using matplotlib for custom formatting
+fig, ax = plt.subplots(figsize=(8, 4))  # You can adjust the width and height here
 
 ax.plot(line_chart_data.index, line_chart_data['Meters Patched'])
 
