@@ -139,12 +139,11 @@ st.pyplot(fig)
 # ---------- Place this just after final_summary is created ----------
 import matplotlib.pyplot as plt
 import io
-from matplotlib import font_manager
 
 def save_summary_as_image(df):
     rows, cols = df.shape
-    col_width = 2  # width per column in inches
-    row_height = 0.5  # height per row in inches
+    col_width = 3  # Increase column width
+    row_height = 0.6
     fig_width = max(8, col_width * cols)
     fig_height = max(2, row_height * (rows + 1))
 
@@ -161,20 +160,19 @@ def save_summary_as_image(df):
     )
 
     table.auto_set_font_size(False)
-    table.set_fontsize(10)
-    table.scale(1, 1.5)
+    table.set_fontsize(11)  # slightly larger font
+    table.scale(1.2, 1.5)   # widen the cells a bit more
 
-    # Apply styling
+    # Style headers and borders
     for (row, col), cell in table.get_celld().items():
         cell.set_edgecolor('black')
         cell.set_linewidth(1)
         cell.set_text_props(ha='center', va='center')
         if row == 0:
-            # Bold header font using font properties
             cell.get_text().set_fontweight('bold')
             cell.set_facecolor('#f0f0f0')
 
-    # Save to buffer
+    # Save image to buffer
     buf = io.BytesIO()
     plt.savefig(buf, format="png", bbox_inches='tight')
     buf.seek(0)
