@@ -42,6 +42,10 @@ patched_today.columns = ['Zone', 'Meters Patched Today']
 
 # Final summary
 final_summary = pd.merge(summary, patched_today, on='Zone', how='left').fillna(0)
+# Convert numeric meter columns to integers (remove decimals)
+meter_cols = ['Total Meters Assigned', 'Total Meters Patched', 'Meters Pending', 'Meters Patched Today']
+final_summary[meter_cols] = final_summary[meter_cols].astype(int)
+
 
 # Display MIS Summary with timestamp
 col1, col2 = st.columns([3, 1])
