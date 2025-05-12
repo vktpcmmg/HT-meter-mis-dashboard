@@ -71,46 +71,6 @@ st.markdown("""
 
 st.markdown(final_summary.to_html(index=False, escape=False), unsafe_allow_html=True)
 
-# Generate downloadable image of MIS summary
-import io
-from PIL import Image, ImageDraw, ImageFont
-
-def create_image_from_summary(df):
-    font = ImageFont.load_default()
-    row_height = 30
-    table_width = 1000
-    table_height = (len(df) + 2) * row_height
-    img = Image.new('RGB', (table_width, table_height), 'white')
-    draw = ImageDraw.Draw(img)
-    headers = list(df.columns)
-    col_width = table_width // len(headers)
-
-    # Draw headers
-    for i, header in enumerate(headers):
-        draw.rectangle([(i * col_width, 10), ((i + 1) * col_width, 10 + row_height)], outline="black", width=1)
-        draw.text((i * col_width + 5, 15), header, font=font, fill="black")
-
-    # Draw data rows
-    for row_idx, row in df.iterrows():
-        for col_idx, item in enumerate(row):
-            y = 10 + (row_idx + 1) * row_height
-            draw.rectangle([(col_idx * col_width, y), ((col_idx + 1) * col_width, y + row_height)], outline="black", width=1)
-            draw.text((col_idx * col_width + 5, y + 5), str(item), font=font, fill="black")
-
-    buf = io.BytesIO()
-    img.save(buf, format="PNG")
-    buf.seek(0)
-    return buf
-
-# Create image and download button
-image_buf = create_image_from_summary(final_summary)
-
-st.download_button(
-    label="📥 Download MIS Summary as Image",
-    data=image_buf,
-    file_name=f"MIS_Summary_{datetime.now().strftime('%Y%m%d')}.png",
-    mime="image/png"
-)
 
 
 # Charts section
@@ -175,3 +135,57 @@ ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 
 # Display the chart
 st.pyplot(fig)
+
+# ---------- Place this just after final_summary is created ----------
+import matplotlib.pyplot as plt
+import io
+
+def save_summary_as_image(df):
+    rows, cols = df.shape
+    col_width = 3  # Increase column width
+    row_height = 0.6
+    fig_width = max(8, col_width * cols)
+    fig_height = max(2, row_height * (rows + 1))
+
+    fig, ax = plt.subplots(figsize=(fig_width, fig_height))
+    ax.axis('off')
+
+    # Create table
+    table = ax.table(
+        cellText=df.values,
+        colLabels=df.columns,
+        cellLoc='center',
+        loc='center',
+        edges='closed'
+    )
+
+    table.auto_set_font_size(False)
+    table.set_fontsize(11)  # slightly larger font
+    table.scale(1.2, 1.5)   # widen the cells a bit more
+
+    # Style headers and borders
+    for (row, col), cell in table.get_celld().items():
+        cell.set_edgecolor('black')
+        cell.set_linewidth(1)
+        cell.set_text_props(ha='center', va='center')
+        if row == 0:
+            cell.get_text().set_fontweight('bold')
+            cell.set_facecolor('#f0f0f0')
+
+    # Save image to buffer
+    buf = io.BytesIO()
+    plt.savefig(buf, format="png", bbox_inches='tight')
+    buf.seek(0)
+    plt.close(fig)
+    return buf
+
+
+# ---------- Add this where you want the download button to appear, below the table ----------
+image_buf = save_summary_as_image(final_summary)
+
+st.download_button(
+    label="📥 Download MIS Summary as Image",
+    data=image_buf,
+    file_name=f"MIS_Summary_{datetime.now().strftime('%Y%m%d')}.png",
+    mime="image/png"
+)
