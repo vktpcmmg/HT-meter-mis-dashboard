@@ -108,8 +108,8 @@ styled_html = f"""
 def save_table_as_image(html_content):
     # Use WeasyPrint to convert HTML to an image
     html = HTML(string=html_content)
-    img = html.write_png()  # Saving the HTML table as PNG image
-    return img
+    img_buf = io.BytesIO(html.write_png())  # Saving the HTML table as PNG image in buffer
+    return img_buf
 
 # Convert the MIS summary table into an image
 img_buf = save_table_as_image(styled_html)
@@ -121,5 +121,3 @@ st.download_button(
     file_name="mis_summary.png",
     mime="image/png"
 )
-
-# Optionally, you can add any further logic to handle charts or additional features as needed
