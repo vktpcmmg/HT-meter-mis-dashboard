@@ -50,20 +50,26 @@ with col2:
     st.markdown(f"#### 🕒 *As of {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}*")
 
 # Show styled table with center alignment
-html_table = final_summary.to_html(index=False)
-st.markdown(f"""
+# Styled HTML table with center-aligned content
+st.markdown("""
     <style>
-        .dataframe th, .dataframe td {{
-            text-align: center;
-            vertical-align: middle;
-        }}
-        .dataframe {{
-            margin: 0 auto;
+        table {
             width: 100%;
-        }}
+            border-collapse: collapse;
+        }
+        th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+            text-align: center;
+        }
+        td {
+            text-align: center;
+        }
     </style>
-    {html_table}
 """, unsafe_allow_html=True)
+
+st.markdown(final_summary.to_html(index=False, escape=False), unsafe_allow_html=True)
+
 
 # Charts section
 st.subheader("📈 Progress Charts")
