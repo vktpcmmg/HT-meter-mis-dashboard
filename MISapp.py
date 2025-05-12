@@ -139,11 +139,12 @@ st.pyplot(fig)
 # ---------- Place this just after final_summary is created ----------
 import matplotlib.pyplot as plt
 import io
+from matplotlib import font_manager
 
 def save_summary_as_image(df):
     rows, cols = df.shape
-    col_width = 2  # Width per column (in inches)
-    row_height = 0.5  # Height per row (in inches)
+    col_width = 2  # width per column in inches
+    row_height = 0.5  # height per row in inches
     fig_width = max(8, col_width * cols)
     fig_height = max(2, row_height * (rows + 1))
 
@@ -151,31 +152,35 @@ def save_summary_as_image(df):
     ax.axis('off')
 
     # Create table
-    table = ax.table(cellText=df.values,
-                     colLabels=df.columns,
-                     cellLoc='center',
-                     loc='center',
-                     edges='closed')
+    table = ax.table(
+        cellText=df.values,
+        colLabels=df.columns,
+        cellLoc='center',
+        loc='center',
+        edges='closed'
+    )
 
-    # Styling
     table.auto_set_font_size(False)
     table.set_fontsize(10)
     table.scale(1, 1.5)
 
-    # Bold header and center align
+    # Apply styling
     for (row, col), cell in table.get_celld().items():
         cell.set_edgecolor('black')
         cell.set_linewidth(1)
         cell.set_text_props(ha='center', va='center')
         if row == 0:
-            cell.set_fontweight('bold')
+            # Bold header font using font properties
+            cell.get_text().set_fontweight('bold')
             cell.set_facecolor('#f0f0f0')
 
     # Save to buffer
     buf = io.BytesIO()
     plt.savefig(buf, format="png", bbox_inches='tight')
     buf.seek(0)
+    plt.close(fig)
     return buf
+
 
 # ---------- Add this where you want the download button to appear, below the table ----------
 image_buf = save_summary_as_image(final_summary)
