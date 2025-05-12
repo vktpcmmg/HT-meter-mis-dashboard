@@ -142,12 +142,12 @@ def save_summary_as_image(df):
     import io
 
     rows, cols = df.shape
-    col_width = 2.5  # Fixed column width
-    row_height = 0.8  # Fixed row height
+    col_width = 1.5     # Narrower columns
+    row_height = 1.2    # Taller rows
     fig_width = col_width * cols
     fig_height = row_height * (rows + 1)
 
-    fig, ax = plt.subplots(figsize=(fig_width, fig_height), dpi=150)  # Higher DPI for print quality
+    fig, ax = plt.subplots(figsize=(fig_width, fig_height), dpi=150)
     ax.axis('off')
 
     # Create table
@@ -160,8 +160,8 @@ def save_summary_as_image(df):
     )
 
     table.auto_set_font_size(False)
-    table.set_fontsize(12)  # More readable font
-    table.scale(1.4, 2.0)   # Increase cell size for clarity
+    table.set_fontsize(12)  # Readable font
+    table.scale(1.0, 2.0)   # Keep columns compact (1.0), rows tall (2.0)
 
     # Style headers and borders
     for (row, col), cell in table.get_celld().items():
@@ -178,6 +178,7 @@ def save_summary_as_image(df):
     buf.seek(0)
     plt.close(fig)
     return buf
+
 
 
 
