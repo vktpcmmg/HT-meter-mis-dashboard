@@ -183,10 +183,9 @@ def save_summary_as_image(df):
         cell.set_edgecolor('black')
         cell.set_linewidth(1)
         cell.set_text_props(ha='center', va='center')
-        
-        if row == 0:  # Header row
+        if row == 0:
             cell.get_text().set_fontweight('bold')
-            cell.set_facecolor('#4CAF50')  # Custom header color (green in this case)
+            cell.set_facecolor('#f0f0f0')
             cell.set_height(cell.get_height() + header_extra_height / fig_height)  # increase only header height
         elif row == len(df):  # Bold the Total row only
             cell.get_text().set_fontweight('bold')
@@ -196,6 +195,9 @@ def save_summary_as_image(df):
     buf.seek(0)
     plt.close(fig)
     return buf
+
+
+
 
 
 
