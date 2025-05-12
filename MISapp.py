@@ -183,6 +183,8 @@ def save_summary_as_image(df):
             cell.get_text().set_fontweight('bold')
             cell.set_facecolor('#f0f0f0')
             cell.set_height(cell.get_height() + header_extra_height / fig_height)  # increase only header height
+        elif row == len(df):  # Bold the Total row only
+            cell.get_text().set_fontweight('bold')
 
     buf = io.BytesIO()
     plt.savefig(buf, format="png", bbox_inches='tight', dpi=150)
