@@ -121,11 +121,15 @@ st.pyplot(fig)
 
 
 
+
 # 2. Bar charts for per-zone metrics (without "Meters Patched Today" section)
+# Exclude 'Total' row from bar chart
+final_summary_plot = final_summary[final_summary['Zone'] != 'Total']
+
 fig, ax = plt.subplots(figsize=(8, 4))
 
-bars1 = ax.bar(final_summary['Zone'], final_summary['Total Meters Patched'], label='Total Meters Patched', color='skyblue')
-bars2 = ax.bar(final_summary['Zone'], final_summary['Meters Pending'], bottom=final_summary['Total Meters Patched'], label='Meters Pending', color='lightcoral')
+bars1 = ax.bar(final_summary_plot['Zone'], final_summary_plot['Total Meters Patched'], label='Total Meters Patched', color='skyblue')
+bars2 = ax.bar(final_summary_plot['Zone'], final_summary_plot['Meters Pending'], bottom=final_summary_plot['Total Meters Patched'], label='Meters Pending', color='lightcoral')
 
 # Add data labels for Total Meters Patched
 for bar in bars1:
@@ -135,7 +139,7 @@ for bar in bars1:
 # Add data labels for Meters Pending
 for bar in bars2:
     yval = bar.get_height()
-    base = final_summary['Total Meters Patched'][bars2.index(bar)]
+    base = final_summary_plot['Total Meters Patched'][bars2.index(bar)]
     ax.text(bar.get_x() + bar.get_width() / 2, base + yval + 1, str(int(yval)), ha='center', va='bottom', fontsize=10)
 
 ax.set_xlabel('Zone')
