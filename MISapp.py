@@ -89,7 +89,7 @@ daily_total['Date'] = pd.to_datetime(daily_total['Date'])
 line_chart_data = daily_total.set_index('Date')
 
 # Create a smaller figure using matplotlib for custom formatting
-fig, ax = plt.subplots(figsize=(8, 6))  # You can adjust the width and height here
+fig, ax = plt.subplots(figsize=(5, 6))  # You can adjust the width and height here
 
 ax.plot(line_chart_data.index, line_chart_data['Meters Patched'])
 
