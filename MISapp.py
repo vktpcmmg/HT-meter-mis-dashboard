@@ -4,6 +4,7 @@ import gspread
 from google.oauth2.service_account import Credentials
 from gspread_dataframe import get_as_dataframe
 from datetime import datetime
+import matplotlib.pyplot as plt
 
 st.set_page_config(page_title="Meter Patch MIS", layout="wide")
 st.title("📊 Meter Patch Daily MIS Dashboard")
@@ -50,7 +51,6 @@ with col2:
     st.markdown(f"#### 🕒 *As of {datetime.now().strftime('%d-%m-%Y')}*")
 
 # Show styled table with center alignment
-
 st.markdown("""
     <style>
         table {
@@ -82,7 +82,23 @@ line_chart_data = daily_total.set_index('Date')
 
 st.line_chart(line_chart_data)
 
-# 2. Bar charts for per-zone metrics
-st.bar_chart(final_summary.set_index('Zone')[['Total Meters Patched']])
-st.bar_chart(final_summary.set_index('Zone')[['Meters Pending']])
-st.bar_chart(final_summary.set_index('Zone')[['Meters Patched Today']])
+# 2. Bar charts for per-zone metrics (with legends on the left side)
+fig, ax = plt.subplots(figsize=(8, 6))
+
+# Bar chart for Total Meters Patched
+ax.bar(final_summary['Zone'], final_summary['Total Meters Patched'], label='Total Meters Patched', color='skyblue')
+# Bar chart for Meters Pending
+ax.bar(final_summary['Zone'], final_summary['Meters Pending'], bottom=final_summary['Total Meters Patched'], label='Meters Pending', color='lightcoral')
+# Bar chart for Meters Patched Today
+ax.bar(final_summary['Zone'], final_summary['Meters Patched Today'], bottom=final_summary['Total Meters Patched'] + final_summary['Meters Pending'], label='Meters Patched Today', color='lightgreen')
+
+# Add labels and title
+ax.set_xlabel('Zone')
+ax.set_ylabel('Meters Count')
+ax.set_title('Meters Patched vs Pending vs Patched Today by Zone')
+
+# Add legend to the left of the bar chart
+ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+
+# Display the chart
+st.pyplot(fig)
