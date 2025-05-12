@@ -10,6 +10,7 @@ st.title("📊 Meter Patch Daily MIS Dashboard")
 
 # Google Sheets authentication
 from google.oauth2.service_account import Credentials
+import streamlit as st
 
 scope = ["https://www.googleapis.com/auth/spreadsheets"]
 creds = Credentials.from_service_account_info(st.secrets["gspread"], scopes=scope)
