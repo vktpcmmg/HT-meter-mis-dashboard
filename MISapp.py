@@ -143,7 +143,7 @@ import io
 def save_summary_as_image(df):
     rows, cols = df.shape
     col_width = 3  # Increase column width
-    row_height = 1
+    row_height = 1.5
     fig_width = max(8, col_width * cols)
     fig_height = max(2, row_height * (rows + 1))
 
