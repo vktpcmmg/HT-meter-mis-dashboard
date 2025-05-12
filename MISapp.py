@@ -137,55 +137,184 @@ ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 st.pyplot(fig)
 
 # ---------- Place this just after final_summary is created ----------
+import streamlit as st
+import pandas as pd
+import gspread
+from google.oauth2.service_account import Credentials
+from gspread_dataframe import get_as_dataframe
+from datetime import datetime
 import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
+st.set_page_config(page_title="HT Meter TOD Patch MIS", layout="wide")
+st.title("📊 HT Meter TOD Patch Daily MIS Dashboard")
+
+# Google Sheets authentication
+scope = ["https://www.googleapis.com/auth/spreadsheets"]
+creds = Credentials.from_service_account_info(st.secrets["gspread"], scopes=scope)
+gc = gspread.authorize(creds)
+
+# Connect to your spreadsheet
+sheet_url = "https://docs.google.com/spreadsheets/d/1z_yeGs78FZeT3EjblCOKuDKS74r7rzXGOOP-Iue9P3U/edit?gid=182645172#gid=182645172"
+spreadsheet = gc.open_by_url(sheet_url)
+
+# Load sheets
+df_daily = get_as_dataframe(spreadsheet.worksheet("Daily Data Entry")).dropna(subset=["Date"])
+df_alloc = get_as_dataframe(spreadsheet.worksheet("Total Meter Allocation per Zone")).dropna()
+
+# Clean and format
+df_daily['Date'] = pd.to_datetime(df_daily['Date']).dt.normalize()
+df_daily['Meters Patched'] = pd.to_numeric(df_daily['Meters Patched'])
+df_alloc['Total Meters Assigned'] = pd.to_numeric(df_alloc['Total Meters Assigned'])
+
+# Cumulative patched per zone
+patched = df_daily.groupby('Zone')['Meters Patched'].sum().reset_index()
+patched.columns = ['Zone', 'Total Meters Patched']
+
+# Merge allocation + patched
+summary = pd.merge(df_alloc, patched, on='Zone', how='left').fillna(0)
+summary['Meters Pending'] = summary['Total Meters Assigned'] - summary['Total Meters Patched']
+
+# Today's data
+today = pd.Timestamp.now().normalize()
+patched_today = df_daily[df_daily['Date'] == today].groupby('Zone')['Meters Patched'].sum().reset_index()
+patched_today.columns = ['Zone', 'Meters Patched Today']
+
+# Final summary
+final_summary = pd.merge(summary, patched_today, on='Zone', how='left').fillna(0)
+
+# Display MIS Summary with timestamp
+col1, col2 = st.columns([3, 1])
+with col1:
+    st.markdown("### 📋 **MIS Summary**")
+with col2:
+    st.markdown(f"#### 🕒 *As of {datetime.now().strftime('%d-%m-%Y')}*")
+
+# Show styled table with center alignment
+st.markdown("""
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            text-align: center;
+            padding: 8px;
+        }
+        th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+            text-align: center !important;
+        }
+    </style>
+""", unsafe_allow_html=True)
+
+st.markdown(final_summary.to_html(index=False, escape=False), unsafe_allow_html=True)
+
+# Generate downloadable image of MIS summary
 import io
+from PIL import Image, ImageDraw, ImageFont
 
-def save_summary_as_image(df):
-    # Define fixed row height and column width
-    fixed_row_height = 1.2  # Increased row height for better visibility
-    fixed_col_width = 3.5   # Increased column width to fit data comfortably
-    
-    fig_width = fixed_col_width * len(df.columns)  # Fixed figure width based on columns
-    fig_height = fixed_row_height * (len(df) + 1)  # Fixed figure height based on rows
-    
-    fig, ax = plt.subplots(figsize=(fig_width, fig_height))
-    ax.axis('off')  # Turn off axis
+def create_image_from_summary(df):
+    font = ImageFont.load_default()
+    row_height = 30
+    table_width = 1000
+    table_height = (len(df) + 2) * row_height
+    img = Image.new('RGB', (table_width, table_height), 'white')
+    draw = ImageDraw.Draw(img)
+    headers = list(df.columns)
+    col_width = table_width // len(headers)
 
-    # Create table with the cell text centered and fixed width
-    table = ax.table(
-        cellText=df.values,
-        colLabels=df.columns,
-        cellLoc='center',
-        loc='center',
-        edges='closed'
-    )
+    # Draw headers
+    for i, header in enumerate(headers):
+        draw.rectangle([(i * col_width, 10), ((i + 1) * col_width, 10 + row_height)], outline="black", width=1)
+        draw.text((i * col_width + 5, 15), header, font=font, fill="black")
 
-    # Set the font size for the table
-    table.auto_set_font_size(False)
-    table.set_fontsize(14)  # Larger font size for better visibility
+    # Draw data rows
+    for row_idx, row in df.iterrows():
+        for col_idx, item in enumerate(row):
+            y = 10 + (row_idx + 1) * row_height
+            draw.rectangle([(col_idx * col_width, y), ((col_idx + 1) * col_width, y + row_height)], outline="black", width=1)
+            draw.text((col_idx * col_width + 5, y + 5), str(item), font=font, fill="black")
 
-    # Style headers and cells
-    for (row, col), cell in table.get_celld().items():
-        cell.set_edgecolor('black')  # Border color
-        cell.set_linewidth(1)  # Border thickness
-        cell.set_text_props(ha='center', va='center')  # Center align text
-        if row == 0:
-            cell.get_text().set_fontweight('bold')  # Bold the header
-            cell.set_facecolor('#f0f0f0')  # Light background for header
-
-        # Set fixed height for rows (for non-header rows)
-        if row != 0:
-            cell.set_height(fixed_row_height)
-
-        # Set fixed width for columns
-        cell.set_width(fixed_col_width)
-
-    # Save image to buffer
     buf = io.BytesIO()
-    plt.savefig(buf, format="png", bbox_inches='tight', dpi=300)  # Use higher dpi for clarity
+    img.save(buf, format="PNG")
     buf.seek(0)
-    plt.close(fig)
     return buf
+
+# Create image and download button
+image_buf = create_image_from_summary(final_summary)
+
+st.download_button(
+    label="📥 Download MIS Summary as Image",
+    data=image_buf,
+    file_name=f"MIS_Summary_{datetime.now().strftime('%Y%m%d')}.png",
+    mime="image/png"
+)
+
+
+# Charts section
+st.subheader("📈 Progress Charts")
+
+# 1. Line chart for total patched per day (all zones)
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
+
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
+
+# 1. Line chart for total patched per day (all zones)
+daily_total = df_daily.groupby('Date')['Meters Patched'].sum().reset_index()
+daily_total['Date'] = pd.to_datetime(daily_total['Date'])
+
+# Line chart data
+# 1. Line chart for cumulative patched per day (all zones)
+daily_total = df_daily.groupby('Date')['Meters Patched'].sum().reset_index()
+daily_total['Date'] = pd.to_datetime(daily_total['Date'])
+
+# Calculate cumulative sum of meters patched over time
+daily_total['Cumulative Meters Patched'] = daily_total['Meters Patched'].cumsum()
+
+# Line chart data
+line_chart_data = daily_total.set_index('Date')
+
+# Create a smaller figure using matplotlib for custom formatting
+fig, ax = plt.subplots(figsize=(6, 2))  # You can adjust the width and height here
+
+ax.plot(line_chart_data.index, line_chart_data['Cumulative Meters Patched'], color='b', label='Cumulative Meters Patched')
+
+# Format the x-axis to show only the date (without time)
+ax.xaxis.set_major_formatter(mdates.DateFormatter('%d-%m-%Y'))
+plt.xticks(rotation=45)  # Rotate the x-axis labels for better readability
+
+# Set labels and title
+ax.set_xlabel('Date')
+ax.set_ylabel('Cumulative Meters Patched')
+ax.set_title('Cumulative Meters Patched Per Day')
+
+# Display the plot
+st.pyplot(fig)
+
+
+
+# 2. Bar charts for per-zone metrics (without "Meters Patched Today" section)
+fig, ax = plt.subplots(figsize=(8, 4))
+
+# Bar chart for Total Meters Patched
+ax.bar(final_summary['Zone'], final_summary['Total Meters Patched'], label='Total Meters Patched', color='skyblue')
+# Bar chart for Meters Pending
+ax.bar(final_summary['Zone'], final_summary['Meters Pending'], bottom=final_summary['Total Meters Patched'], label='Meters Pending', color='lightcoral')
+
+# Add labels and title
+ax.set_xlabel('Zone')
+ax.set_ylabel('Meters Count')
+ax.set_title('Meters Patched vs Pending by Zone')
+
+# Add legend to the left of the bar chart
+ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+
+# Display the chart
+st.pyplot(fig)
+
 
 
 
