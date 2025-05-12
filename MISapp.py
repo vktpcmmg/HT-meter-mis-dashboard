@@ -142,26 +142,26 @@ def save_summary_as_image(df):
     import io
 
     rows, cols = df.shape
-    col_width = 2.8    # Increased column width
-    row_height = 1.0   # Keep rows moderately tall
+    col_width = 3.5     # FIXED wide columns
+    row_height = 1.0    # FIXED row height
     fig_width = col_width * cols
     fig_height = row_height * (rows + 1)
 
-    fig, ax = plt.subplots(figsize=(fig_width, fig_height), dpi=150)
+    fig, ax = plt.subplots(figsize=(fig_width, fig_height), dpi=200)
     ax.axis('off')
 
-    # Column labels (without line breaks)
+    # Create table
     table = ax.table(
         cellText=df.values,
-        colLabels=list(df.columns),  # keep as-is (no wrapping)
+        colLabels=df.columns,
         cellLoc='center',
         loc='center',
         edges='closed'
     )
 
     table.auto_set_font_size(False)
-    table.set_fontsize(12)
-    table.scale(1.2, 2.0)  # Slightly wider and taller
+    table.set_fontsize(13)
+    table.scale(1.3, 2.0)  # Increase cell size: (width_scale, height_scale)
 
     # Style cells
     for (row, col), cell in table.get_celld().items():
@@ -171,12 +171,14 @@ def save_summary_as_image(df):
         if row == 0:
             cell.get_text().set_fontweight('bold')
             cell.set_facecolor('#f0f0f0')
+            cell.get_text().set_wrap(False)  # Make sure wrapping is off
 
     buf = io.BytesIO()
-    plt.savefig(buf, format="png", bbox_inches='tight', dpi=150)
+    plt.savefig(buf, format="png", bbox_inches='tight', dpi=200)
     buf.seek(0)
     plt.close(fig)
     return buf
+
 
 
 
