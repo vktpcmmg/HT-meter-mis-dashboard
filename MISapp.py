@@ -89,52 +89,53 @@ daily_total['Date'] = pd.to_datetime(daily_total['Date'])
 
 # Line chart data
 # 1. Line chart for cumulative patched per day (all zones)
+# 1. Line chart for cumulative patched per day (all zones)
 daily_total = df_daily.groupby('Date')['Meters Patched'].sum().reset_index()
 daily_total['Date'] = pd.to_datetime(daily_total['Date'])
-
-# Calculate cumulative sum of meters patched over time
 daily_total['Cumulative Meters Patched'] = daily_total['Meters Patched'].cumsum()
-
-# Line chart data
 line_chart_data = daily_total.set_index('Date')
 
-# Create a smaller figure using matplotlib for custom formatting
-fig, ax = plt.subplots(figsize=(6, 2))  # You can adjust the width and height here
+fig, ax = plt.subplots(figsize=(6, 2))
 
 ax.plot(line_chart_data.index, line_chart_data['Cumulative Meters Patched'], color='b', label='Cumulative Meters Patched')
 
-# Format the x-axis to show only the date (without time)
-ax.xaxis.set_major_formatter(mdates.DateFormatter('%d-%m-%Y'))
-plt.xticks(rotation=45)  # Rotate the x-axis labels for better readability
+# Add data labels
+for i, value in enumerate(line_chart_data['Cumulative Meters Patched']):
+    ax.text(line_chart_data.index[i], value, str(int(value)), fontsize=9, color='blue', ha='center', va='bottom')
 
-# Set labels and title
+ax.xaxis.set_major_formatter(mdates.DateFormatter('%d-%m-%Y'))
+plt.xticks(rotation=45)
 ax.set_xlabel('Date')
 ax.set_ylabel('Cumulative Meters Patched')
 ax.set_title('Cumulative Meters Patched Per Day')
-
-# Display the plot
 st.pyplot(fig)
+
 
 
 
 # 2. Bar charts for per-zone metrics (without "Meters Patched Today" section)
 fig, ax = plt.subplots(figsize=(8, 4))
 
-# Bar chart for Total Meters Patched
-ax.bar(final_summary['Zone'], final_summary['Total Meters Patched'], label='Total Meters Patched', color='skyblue')
-# Bar chart for Meters Pending
-ax.bar(final_summary['Zone'], final_summary['Meters Pending'], bottom=final_summary['Total Meters Patched'], label='Meters Pending', color='lightcoral')
+bars1 = ax.bar(final_summary['Zone'], final_summary['Total Meters Patched'], label='Total Meters Patched', color='skyblue')
+bars2 = ax.bar(final_summary['Zone'], final_summary['Meters Pending'], bottom=final_summary['Total Meters Patched'], label='Meters Pending', color='lightcoral')
 
-# Add labels and title
+# Add data labels for Total Meters Patched
+for bar in bars1:
+    yval = bar.get_height()
+    ax.text(bar.get_x() + bar.get_width() / 2, yval + 1, str(int(yval)), ha='center', va='bottom', fontsize=10)
+
+# Add data labels for Meters Pending
+for bar in bars2:
+    yval = bar.get_height()
+    base = final_summary['Total Meters Patched'][bars2.index(bar)]
+    ax.text(bar.get_x() + bar.get_width() / 2, base + yval + 1, str(int(yval)), ha='center', va='bottom', fontsize=10)
+
 ax.set_xlabel('Zone')
 ax.set_ylabel('Meters Count')
 ax.set_title('Meters Patched vs Pending by Zone')
-
-# Add legend to the left of the bar chart
 ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
-
-# Display the chart
 st.pyplot(fig)
+
 
 # ---------- Place this just after final_summary is created ----------
 def save_summary_as_image(df): 
