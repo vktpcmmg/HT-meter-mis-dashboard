@@ -142,8 +142,8 @@ import io
 
 def save_summary_as_image(df):
     # Define fixed row height and column width
-    fixed_row_height = 0.8  # Increased row height
-    fixed_col_width = 3.0   # Increased column width to fit the content better
+    fixed_row_height = 1.2  # Increased row height for better visibility
+    fixed_col_width = 3.5   # Increased column width to fit data comfortably
     
     fig_width = fixed_col_width * len(df.columns)  # Fixed figure width based on columns
     fig_height = fixed_row_height * (len(df) + 1)  # Fixed figure height based on rows
@@ -160,9 +160,9 @@ def save_summary_as_image(df):
         edges='closed'
     )
 
-    # Set the font size
+    # Set the font size for the table
     table.auto_set_font_size(False)
-    table.set_fontsize(12)  # You can adjust the font size here if needed
+    table.set_fontsize(14)  # Larger font size for better visibility
 
     # Style headers and cells
     for (row, col), cell in table.get_celld().items():
