@@ -3,9 +3,9 @@ import pandas as pd
 import gspread
 from google.oauth2.service_account import Credentials
 from gspread_dataframe import get_as_dataframe
+import matplotlib.pyplot as plt
 from datetime import datetime
 
-# Set page configuration
 st.set_page_config(page_title="Meter Patch MIS", layout="wide")
 st.title("📊 Meter Patch Daily MIS Dashboard")
 
@@ -50,27 +50,24 @@ with col1:
 with col2:
     st.markdown(f"#### 🕒 *As of {datetime.now().strftime('%d-%m-%Y')}*")
 
-# Add custom CSS for table styling
+# Show styled table with center alignment
 st.markdown("""
     <style>
         table {
             width: 100%;
             border-collapse: collapse;
         }
-        thead th {
+        th {
             background-color: #f0f0f0;
             font-weight: bold;
-            text-align: center !important;
-            vertical-align: middle;
+            text-align: center;
         }
-        tbody td {
-            text-align: center !important;
-            vertical-align: middle;
+        td {
+            text-align: center;
         }
     </style>
 """, unsafe_allow_html=True)
 
-# Display summary table
 st.markdown(final_summary.to_html(index=False, escape=False), unsafe_allow_html=True)
 
 # Charts section
@@ -84,7 +81,28 @@ line_chart_data = daily_total.set_index('Date')
 
 st.line_chart(line_chart_data)
 
-# 2. Bar charts for per-zone metrics
-st.bar_chart(final_summary.set_index('Zone')[['Total Meters Patched']])
-st.bar_chart(final_summary.set_index('Zone')[['Meters Pending']])
-st.bar_chart(final_summary.set_index('Zone')[['Meters Patched Today']])
+# 2. Bar charts for per-zone metrics with legends on the left
+fig, ax = plt.subplots(1, 3, figsize=(18, 6))
+
+# Total Meters Patched bar chart
+ax[0].bar(final_summary['Zone'], final_summary['Total Meters Patched'], color='blue', label='Total Meters Patched')
+ax[0].set_title('Total Meters Patched')
+ax[0].legend(loc='upper left')
+
+# Meters Pending bar chart
+ax[1].bar(final_summary['Zone'], final_summary['Meters Pending'], color='red', label='Meters Pending')
+ax[1].set_title('Meters Pending')
+ax[1].legend(loc='upper left')
+
+# Meters Patched Today bar chart
+ax[2].bar(final_summary['Zone'], final_summary['Meters Patched Today'], color='green', label='Meters Patched Today')
+ax[2].set_title('Meters Patched Today')
+ax[2].legend(loc='upper left')
+
+# Set labels and titles
+for a in ax:
+    a.set_xlabel('Zone')
+    a.set_ylabel('Count')
+
+# Display the plot
+st.pyplot(fig)
