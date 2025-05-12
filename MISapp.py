@@ -4,11 +4,12 @@ import gspread
 from google.oauth2.service_account import Credentials
 from gspread_dataframe import get_as_dataframe
 from datetime import datetime
-from PIL import Image, ImageDraw, ImageFont
-import io
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
+from PIL import Image
+import io
 
+# Set page configuration
 st.set_page_config(page_title="Meter Patch MIS", layout="wide")
 st.title("📊 Meter Patch Daily MIS Dashboard")
 
@@ -74,41 +75,6 @@ st.markdown("""
 
 st.markdown(final_summary.to_html(index=False, escape=False), unsafe_allow_html=True)
 
-# Function to convert DataFrame to Image
-def dataframe_to_image(df):
-    img = Image.new('RGB', (1200, 500), color='white')
-    draw = ImageDraw.Draw(img)
-
-    # Set font
-    font = ImageFont.load_default()
-
-    # Draw header
-    for i, col in enumerate(df.columns):
-        draw.text((i * 200 + 10, 20), col, font=font, fill="black")
-
-    # Draw rows
-    for i, row in df.iterrows():
-        for j, val in enumerate(row):
-            draw.text((j * 200 + 10, (i + 1) * 30 + 20), str(val), font=font, fill="black")
-    
-    # Save to an in-memory buffer
-    img_buffer = io.BytesIO()
-    img.save(img_buffer, format="PNG")
-    img_buffer.seek(0)
-    
-    return img_buffer
-
-# Create image from final_summary dataframe
-img_buffer = dataframe_to_image(final_summary)
-
-# Provide a button to download the image
-st.download_button(
-    label="Download MIS Summary as Image",
-    data=img_buffer,
-    file_name="MIS_Summary.png",
-    mime="image/png"
-)
-
 # Charts section
 st.subheader("📈 Progress Charts")
 
@@ -155,3 +121,31 @@ ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 
 # Display the chart
 st.pyplot(fig)
+
+# Function to save the figure as an image and make it downloadable
+def save_fig_to_image(fig):
+    # Save the figure to a BytesIO object
+    img_buf = io.BytesIO()
+    fig.savefig(img_buf, format="png", bbox_inches='tight')
+    img_buf.seek(0)
+    img = Image.open(img_buf)
+    return img_buf
+
+# Save the bar chart and line chart figures as images
+img_buf_line_chart = save_fig_to_image(fig)
+img_buf_bar_chart = save_fig_to_image(fig)
+
+# Provide a download button to download the image
+st.download_button(
+    label="Download Line Chart as Image",
+    data=img_buf_line_chart,
+    file_name="line_chart.png",
+    mime="image/png"
+)
+
+st.download_button(
+    label="Download Bar Chart as Image",
+    data=img_buf_bar_chart,
+    file_name="bar_chart.png",
+    mime="image/png"
+)
