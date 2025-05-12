@@ -5,7 +5,6 @@ from google.oauth2.service_account import Credentials
 from gspread_dataframe import get_as_dataframe
 from datetime import datetime
 
-# Streamlit page configuration
 st.set_page_config(page_title="Meter Patch MIS", layout="wide")
 st.title("📊 Meter Patch Daily MIS Dashboard")
 
@@ -22,48 +21,62 @@ spreadsheet = gc.open_by_url(sheet_url)
 df_daily = get_as_dataframe(spreadsheet.worksheet("Daily Data Entry")).dropna(subset=["Date"])
 df_alloc = get_as_dataframe(spreadsheet.worksheet("Total Meter Allocation per Zone")).dropna()
 
-# Clean up
-df_daily['Date'] = pd.to_datetime(df_daily['Date'])
+# Clean and format
+df_daily['Date'] = pd.to_datetime(df_daily['Date']).dt.normalize()
 df_daily['Meters Patched'] = pd.to_numeric(df_daily['Meters Patched'])
 df_alloc['Total Meters Assigned'] = pd.to_numeric(df_alloc['Total Meters Assigned'])
 
-# Cumulative patched
+# Cumulative patched per zone
 patched = df_daily.groupby('Zone')['Meters Patched'].sum().reset_index()
 patched.columns = ['Zone', 'Total Meters Patched']
 
-# Merge with allocation
+# Merge allocation + patched
 summary = pd.merge(df_alloc, patched, on='Zone', how='left').fillna(0)
 summary['Meters Pending'] = summary['Total Meters Assigned'] - summary['Total Meters Patched']
 
-# Today’s data
+# Today's data
 today = pd.Timestamp.now().normalize()
 patched_today = df_daily[df_daily['Date'] == today].groupby('Zone')['Meters Patched'].sum().reset_index()
 patched_today.columns = ['Zone', 'Meters Patched Today']
 
-# Merge to final
+# Final summary
 final_summary = pd.merge(summary, patched_today, on='Zone', how='left').fillna(0)
 
-# Display MIS Summary with current timestamp
-current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-st.markdown(f"### MIS Summary (as of {current_time})")
-st.dataframe(final_summary.style.set_properties(**{'text-align': 'center'}))
+# Display MIS Summary with timestamp
+col1, col2 = st.columns([3, 1])
+with col1:
+    st.markdown("### 📋 **MIS Summary**")
+with col2:
+    st.markdown(f"#### 🕒 *As of {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}*")
 
-# --- Progress Charts ---
+# Show styled table with center alignment
+html_table = final_summary.to_html(index=False)
+st.markdown(f"""
+    <style>
+        .dataframe th, .dataframe td {{
+            text-align: center;
+            vertical-align: middle;
+        }}
+        .dataframe {{
+            margin: 0 auto;
+            width: 100%;
+        }}
+    </style>
+    {html_table}
+""", unsafe_allow_html=True)
+
+# Charts section
 st.subheader("📈 Progress Charts")
 
-# Line Chart for Total Meters Patched (Cumulative count of all zones)
-df_cumulative = df_daily.groupby('Date')['Meters Patched'].sum().reset_index()
-df_cumulative['Date'] = df_cumulative['Date'].dt.date  # Strip time part to show only date
-st.line_chart(df_cumulative.set_index('Date')['Meters Patched'])
+# 1. Line chart for total patched per day (all zones)
+daily_total = df_daily.groupby('Date')['Meters Patched'].sum().reset_index()
+daily_total['Date'] = pd.to_datetime(daily_total['Date'])
 
-# Bar Chart for Total Meters Patched by Zone (Cumulative)
-st.subheader("Cumulative Upload Count by Zone (Bar Chart)")
+line_chart_data = daily_total.set_index('Date')
+
+st.line_chart(line_chart_data)
+
+# 2. Bar charts for per-zone metrics
 st.bar_chart(final_summary.set_index('Zone')[['Total Meters Patched']])
-
-# Bar Chart for Meters Pending by Zone
-st.subheader("Meters Pending by Zone (Bar Chart)")
 st.bar_chart(final_summary.set_index('Zone')[['Meters Pending']])
-
-# Bar Chart for Meters Patched Today by Zone
-st.subheader("Meters Patched Today (Bar Chart)")
 st.bar_chart(final_summary.set_index('Zone')[['Meters Patched Today']])
