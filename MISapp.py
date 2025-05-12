@@ -1,10 +1,11 @@
+pip install pillow
 import streamlit as st
 import pandas as pd
 import gspread
 from google.oauth2.service_account import Credentials
 from gspread_dataframe import get_as_dataframe
 from datetime import datetime
-from weasyprint import HTML
+from PIL import Image, ImageDraw, ImageFont
 import io
 
 st.set_page_config(page_title="Meter Patch MIS", layout="wide")
@@ -73,51 +74,39 @@ st.markdown("""
 
 st.markdown(final_summary.to_html(index=False, escape=False), unsafe_allow_html=True)
 
-# MIS summary table as HTML
-html_content = final_summary.to_html(index=False, escape=False)
+# Function to create an image of the MIS summary
+def create_image_from_summary(summary_df):
+    # Convert dataframe to HTML
+    html_content = summary_df.to_html(index=False)
 
-# Add CSS styling for the table (borders and bold header)
-styled_html = f"""
-    <html>
-        <head>
-            <style>
-                table {{
-                    width: 100%;
-                    border-collapse: collapse;
-                    font-family: Arial, sans-serif;
-                }}
-                th, td {{
-                    border: 1px solid black;
-                    padding: 8px;
-                    text-align: center;
-                }}
-                th {{
-                    background-color: #f0f0f0;
-                    font-weight: bold;
-                }}
-            </style>
-        </head>
-        <body>
-            <h3 style="text-align:center;">MIS Summary</h3>
-            {html_content}
-        </body>
-    </html>
-"""
+    # Initialize Pillow Image
+    width, height = 800, 600
+    img = Image.new("RGB", (width, height), color=(255, 255, 255))
+    draw = ImageDraw.Draw(img)
 
-# Function to convert HTML to image
-def save_table_as_image(html_content):
-    # Use WeasyPrint to convert HTML to an image
-    html = HTML(string=html_content)
-    img_buf = io.BytesIO(html.write_png())  # Saving the HTML table as PNG image in buffer
+    # Adding basic font (You can specify any available font)
+    font = ImageFont.load_default()
+
+    # Write the HTML content into the image (simplified for now)
+    text = html_content.replace("<td>", " ").replace("</td>", " ").replace("<tr>", "").replace("</tr>", "\n")
+    
+    # Draw the text
+    draw.text((10, 10), text, font=font, fill="black")
+
+    # Save image in a buffer
+    img_buf = io.BytesIO()
+    img.save(img_buf, format="PNG")
+    img_buf.seek(0)
     return img_buf
 
-# Convert the MIS summary table into an image
-img_buf = save_table_as_image(styled_html)
+# Create image from the final summary
+img_buf = create_image_from_summary(final_summary)
 
-# Provide a download button for the image
+# Add a download button for the image
 st.download_button(
     label="Download MIS Summary as Image",
     data=img_buf,
     file_name="mis_summary.png",
     mime="image/png"
 )
+
