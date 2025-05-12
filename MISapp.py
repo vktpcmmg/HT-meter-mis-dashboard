@@ -45,6 +45,10 @@ final_summary = pd.merge(summary, patched_today, on='Zone', how='left').fillna(0
 # Convert numeric meter columns to integers (remove decimals)
 meter_cols = ['Total Meters Assigned', 'Total Meters Patched', 'Meters Pending', 'Meters Patched Today']
 final_summary[meter_cols] = final_summary[meter_cols].astype(int)
+# Add Total row to MIS summary
+total_row = final_summary[meter_cols].sum(numeric_only=True).to_frame().T
+total_row.insert(0, 'Zone', 'Total')
+final_summary = pd.concat([final_summary, total_row], ignore_index=True)
 
 
 # Display MIS Summary with timestamp
