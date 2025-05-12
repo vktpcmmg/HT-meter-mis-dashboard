@@ -86,12 +86,20 @@ daily_total = df_daily.groupby('Date')['Meters Patched'].sum().reset_index()
 daily_total['Date'] = pd.to_datetime(daily_total['Date'])
 
 # Line chart data
+# 1. Line chart for cumulative patched per day (all zones)
+daily_total = df_daily.groupby('Date')['Meters Patched'].sum().reset_index()
+daily_total['Date'] = pd.to_datetime(daily_total['Date'])
+
+# Calculate cumulative sum of meters patched over time
+daily_total['Cumulative Meters Patched'] = daily_total['Meters Patched'].cumsum()
+
+# Line chart data
 line_chart_data = daily_total.set_index('Date')
 
 # Create a smaller figure using matplotlib for custom formatting
 fig, ax = plt.subplots(figsize=(6, 2))  # You can adjust the width and height here
 
-ax.plot(line_chart_data.index, line_chart_data['Meters Patched'])
+ax.plot(line_chart_data.index, line_chart_data['Cumulative Meters Patched'], color='b', label='Cumulative Meters Patched')
 
 # Format the x-axis to show only the date (without time)
 ax.xaxis.set_major_formatter(mdates.DateFormatter('%d-%m-%Y'))
@@ -99,11 +107,12 @@ plt.xticks(rotation=45)  # Rotate the x-axis labels for better readability
 
 # Set labels and title
 ax.set_xlabel('Date')
-ax.set_ylabel('Meters Patched')
-ax.set_title('Total Meters Patched Per Day')
+ax.set_ylabel('Cumulative Meters Patched')
+ax.set_title('Cumulative Meters Patched Per Day')
 
 # Display the plot
 st.pyplot(fig)
+
 
 
 # 2. Bar charts for per-zone metrics (without "Meters Patched Today" section)
