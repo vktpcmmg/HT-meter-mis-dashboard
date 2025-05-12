@@ -182,6 +182,8 @@ def save_summary_as_image(df):
         if row == 0:
             cell.get_text().set_fontweight('bold')
             cell.set_facecolor('#f0f0f0')
+        elif row == len(df):  # Last row (Total row)
+            cell.get_text().set_fontweight('bold')
             cell.set_height(cell.get_height() + header_extra_height / fig_height)  # increase only header height
 
     buf = io.BytesIO()
