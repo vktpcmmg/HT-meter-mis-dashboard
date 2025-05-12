@@ -89,7 +89,7 @@ daily_total['Date'] = pd.to_datetime(daily_total['Date'])
 line_chart_data = daily_total.set_index('Date')
 
 # Create a smaller figure using matplotlib for custom formatting
-fig, ax = plt.subplots(figsize=(8, 2))  # You can adjust the width and height here
+fig, ax = plt.subplots(figsize=(8, 6))  # You can adjust the width and height here
 
 ax.plot(line_chart_data.index, line_chart_data['Meters Patched'])
 
@@ -107,7 +107,7 @@ st.pyplot(fig)
 
 
 # 2. Bar charts for per-zone metrics (without "Meters Patched Today" section)
-fig, ax = plt.subplots(figsize=(8, 2))
+fig, ax = plt.subplots(figsize=(8, 4))
 
 # Bar chart for Total Meters Patched
 ax.bar(final_summary['Zone'], final_summary['Total Meters Patched'], label='Total Meters Patched', color='skyblue')
