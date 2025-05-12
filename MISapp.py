@@ -141,16 +141,17 @@ import matplotlib.pyplot as plt
 import io
 
 def save_summary_as_image(df):
-    rows, cols = df.shape
-    col_width = max(4, 8 // len(df.columns))  # Increase column width dynamically
-    row_height = 0.8  # Increase row height to give more space
-    fig_width = max(10, col_width * cols)  # Adjust figure width
-    fig_height = max(3, row_height * (rows + 1))  # Adjust figure height
-
+    # Define fixed row height and column width
+    fixed_row_height = 0.8  # Increased row height
+    fixed_col_width = 3.0   # Increased column width to fit the content better
+    
+    fig_width = fixed_col_width * len(df.columns)  # Fixed figure width based on columns
+    fig_height = fixed_row_height * (len(df) + 1)  # Fixed figure height based on rows
+    
     fig, ax = plt.subplots(figsize=(fig_width, fig_height))
-    ax.axis('off')
+    ax.axis('off')  # Turn off axis
 
-    # Create table with the cell text centered and dynamic width
+    # Create table with the cell text centered and fixed width
     table = ax.table(
         cellText=df.values,
         colLabels=df.columns,
@@ -159,19 +160,25 @@ def save_summary_as_image(df):
         edges='closed'
     )
 
-    # Set the font size larger
+    # Set the font size
     table.auto_set_font_size(False)
-    table.set_fontsize(14)  # Increased font size
-    table.scale(1.5, 1.5)   # Adjust cell scaling for better spacing
+    table.set_fontsize(12)  # You can adjust the font size here if needed
 
     # Style headers and cells
     for (row, col), cell in table.get_celld().items():
-        cell.set_edgecolor('black')
-        cell.set_linewidth(1)
+        cell.set_edgecolor('black')  # Border color
+        cell.set_linewidth(1)  # Border thickness
         cell.set_text_props(ha='center', va='center')  # Center align text
         if row == 0:
             cell.get_text().set_fontweight('bold')  # Bold the header
             cell.set_facecolor('#f0f0f0')  # Light background for header
+
+        # Set fixed height for rows (for non-header rows)
+        if row != 0:
+            cell.set_height(fixed_row_height)
+
+        # Set fixed width for columns
+        cell.set_width(fixed_col_width)
 
     # Save image to buffer
     buf = io.BytesIO()
