@@ -196,4 +196,3 @@ st.download_button(
     file_name=f"MIS_Summary_{datetime.now().strftime('%Y%m%d')}.png",
     mime="image/png"
 )
-
