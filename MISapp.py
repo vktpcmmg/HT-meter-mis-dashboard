@@ -51,10 +51,10 @@ st.dataframe(final_summary.style.set_properties(**{'text-align': 'center'}))
 # --- Progress Charts ---
 st.subheader("📈 Progress Charts")
 
-# Line Chart for Total Meters Patched over Time
-df_line = df_daily.groupby(['Date', 'Zone'])['Meters Patched'].sum().reset_index()
-df_line_pivot = df_line.pivot(index='Date', columns='Zone', values='Meters Patched')
-st.line_chart(df_line_pivot)
+# Line Chart for Total Meters Patched (Cumulative count of all zones)
+df_cumulative = df_daily.groupby('Date')['Meters Patched'].sum().reset_index()
+df_cumulative['Date'] = df_cumulative['Date'].dt.date  # Strip time part to show only date
+st.line_chart(df_cumulative.set_index('Date')['Meters Patched'])
 
 # Bar Chart for Total Meters Patched by Zone (Cumulative)
 st.subheader("Cumulative Upload Count by Zone (Bar Chart)")
