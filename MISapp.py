@@ -137,17 +137,17 @@ ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 st.pyplot(fig)
 
 # ---------- Place this just after final_summary is created ----------
-import matplotlib.pyplot as plt
-import io
-
 def save_summary_as_image(df):
-    rows, cols = df.shape
-    col_width = 3  # Increase column width
-    row_height = 0.6
-    fig_width = max(8, col_width * cols)
-    fig_height = max(2, row_height * (rows + 1))
+    import matplotlib.pyplot as plt
+    import io
 
-    fig, ax = plt.subplots(figsize=(fig_width, fig_height))
+    rows, cols = df.shape
+    col_width = 2.5  # Fixed column width
+    row_height = 0.8  # Fixed row height
+    fig_width = col_width * cols
+    fig_height = row_height * (rows + 1)
+
+    fig, ax = plt.subplots(figsize=(fig_width, fig_height), dpi=150)  # Higher DPI for print quality
     ax.axis('off')
 
     # Create table
@@ -160,8 +160,8 @@ def save_summary_as_image(df):
     )
 
     table.auto_set_font_size(False)
-    table.set_fontsize(11)  # slightly larger font
-    table.scale(1.2, 1.5)   # widen the cells a bit more
+    table.set_fontsize(12)  # More readable font
+    table.scale(1.4, 2.0)   # Increase cell size for clarity
 
     # Style headers and borders
     for (row, col), cell in table.get_celld().items():
@@ -172,12 +172,13 @@ def save_summary_as_image(df):
             cell.get_text().set_fontweight('bold')
             cell.set_facecolor('#f0f0f0')
 
-    # Save image to buffer
+    # Save to buffer
     buf = io.BytesIO()
-    plt.savefig(buf, format="png", bbox_inches='tight')
+    plt.savefig(buf, format="png", bbox_inches='tight', dpi=150)
     buf.seek(0)
     plt.close(fig)
     return buf
+
 
 
 # ---------- Add this where you want the download button to appear, below the table ----------
@@ -189,3 +190,4 @@ st.download_button(
     file_name=f"MIS_Summary_{datetime.now().strftime('%Y%m%d')}.png",
     mime="image/png"
 )
+
