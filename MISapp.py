@@ -9,10 +9,11 @@ st.set_page_config(page_title="Meter Patch MIS", layout="wide")
 st.title("📊 Meter Patch Daily MIS Dashboard")
 
 # Google Sheets authentication
-SERVICE_ACCOUNT_JSON = "service_account.json"  # Path to your JSON key file
+from google.oauth2.service_account import Credentials
 
-scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-creds = Credentials.from_service_account_file(SERVICE_ACCOUNT_JSON, scopes=scope)
+scope = ["https://www.googleapis.com/auth/spreadsheets"]
+creds = Credentials.from_service_account_info(st.secrets["gspread"], scopes=scope)
+
 gc = gspread.authorize(creds)
 
 # Connect to your spreadsheet
