@@ -8,7 +8,6 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from PIL import Image
 import io
-from weasyprint import HTML
 
 # Set page configuration
 st.set_page_config(page_title="Meter Patch MIS", layout="wide")
@@ -74,23 +73,71 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Convert the final summary DataFrame to HTML
-html_table = final_summary.to_html(index=False, escape=False)
+st.markdown(final_summary.to_html(index=False, escape=False), unsafe_allow_html=True)
 
-# Function to save the MIS summary table as an image using WeasyPrint
-def save_table_as_image(html_content):
-    # Use WeasyPrint to convert HTML to an image
-    html = HTML(string=html_content)
-    img = html.write_png()  # Saving the HTML table as PNG image
-    return img
+# Charts section
+st.subheader("📈 Progress Charts")
 
-# Convert the MIS summary table into an image
-img_buf = save_table_as_image(html_table)
+# 1. Line chart for total patched per day (all zones)
+daily_total = df_daily.groupby('Date')['Meters Patched'].sum().reset_index()
+daily_total['Date'] = pd.to_datetime(daily_total['Date'])
+
+# Line chart data
+line_chart_data = daily_total.set_index('Date')
+
+# Create a smaller figure using matplotlib for custom formatting
+fig, ax = plt.subplots(figsize=(6, 2))  # You can adjust the width and height here
+
+ax.plot(line_chart_data.index, line_chart_data['Meters Patched'])
+
+# Format the x-axis to show only the date (without time)
+ax.xaxis.set_major_formatter(mdates.DateFormatter('%d-%m-%Y'))
+plt.xticks(rotation=45)  # Rotate the x-axis labels for better readability
+
+# Set labels and title
+ax.set_xlabel('Date')
+ax.set_ylabel('Meters Patched')
+ax.set_title('Total Meters Patched Per Day')
+
+# 2. Bar charts for per-zone metrics (without "Meters Patched Today" section)
+fig2, ax2 = plt.subplots(figsize=(8, 4))
+
+# Bar chart for Total Meters Patched
+ax2.bar(final_summary['Zone'], final_summary['Total Meters Patched'], label='Total Meters Patched', color='skyblue')
+# Bar chart for Meters Pending
+ax2.bar(final_summary['Zone'], final_summary['Meters Pending'], bottom=final_summary['Total Meters Patched'], label='Meters Pending', color='lightcoral')
+
+# Add labels and title
+ax2.set_xlabel('Zone')
+ax2.set_ylabel('Meters Count')
+ax2.set_title('Meters Patched vs Pending by Zone')
+
+# Add legend to the left of the bar chart
+ax2.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+
+# Function to save the figure as an image and make it downloadable
+def save_fig_to_image(fig):
+    # Save the figure to a BytesIO object
+    img_buf = io.BytesIO()
+    fig.savefig(img_buf, format="png", bbox_inches='tight')
+    img_buf.seek(0)
+    return img_buf
+
+# Save the line chart and bar chart figures as images
+img_buf_line_chart = save_fig_to_image(fig)
+img_buf_bar_chart = save_fig_to_image(fig2)
 
 # Provide a download button to download the image
 st.download_button(
-    label="Download MIS Summary as Image",
-    data=img_buf,
-    file_name="mis_summary.png",
+    label="Download Line Chart as Image",
+    data=img_buf_line_chart,
+    file_name="line_chart.png",
+    mime="image/png"
+)
+
+st.download_button(
+    label="Download Bar Chart as Image",
+    data=img_buf_bar_chart,
+    file_name="bar_chart.png",
     mime="image/png"
 )
