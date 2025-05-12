@@ -55,13 +55,9 @@ final_summary = pd.concat([final_summary, total_row], ignore_index=True)
 col1, col2 = st.columns([3, 1])
 with col1:
     st.markdown("### 📋 **MIS Summary**")
-from datetime import datetime, timedelta
-
-# Convert UTC to IST
-ist_now = datetime.utcnow() + timedelta(hours=5, minutes=30)
 
 with col2:
-    st.markdown(f"#### 🕒 *As of {ist_now.strftime('%d-%m-%Y')}*")
+    st.markdown(f"#### 🕒 *As of {datetime.now().strftime('%d-%m-%Y')}*")
 
 # Show styled table with center alignment
 st.markdown("""
