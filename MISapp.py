@@ -5,15 +5,13 @@ from google.oauth2.service_account import Credentials
 from gspread_dataframe import get_as_dataframe
 from datetime import datetime
 
+# Streamlit page configuration
 st.set_page_config(page_title="Meter Patch MIS", layout="wide")
 st.title("📊 Meter Patch Daily MIS Dashboard")
 
 # Google Sheets authentication
-from google.oauth2.service_account import Credentials
-
 scope = ["https://www.googleapis.com/auth/spreadsheets"]
 creds = Credentials.from_service_account_info(st.secrets["gspread"], scopes=scope)
-
 gc = gspread.authorize(creds)
 
 # Connect to your spreadsheet
@@ -45,12 +43,27 @@ patched_today.columns = ['Zone', 'Meters Patched Today']
 # Merge to final
 final_summary = pd.merge(summary, patched_today, on='Zone', how='left').fillna(0)
 
-# Display
-st.subheader("📋 MIS Summary")
-st.dataframe(final_summary)
+# Display MIS Summary with current timestamp
+current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+st.markdown(f"### MIS Summary (as of {current_time})")
+st.dataframe(final_summary.style.set_properties(**{'text-align': 'center'}))
 
-# Charts
+# --- Progress Charts ---
 st.subheader("📈 Progress Charts")
+
+# Line Chart for Total Meters Patched over Time
+df_line = df_daily.groupby(['Date', 'Zone'])['Meters Patched'].sum().reset_index()
+df_line_pivot = df_line.pivot(index='Date', columns='Zone', values='Meters Patched')
+st.line_chart(df_line_pivot)
+
+# Bar Chart for Total Meters Patched by Zone (Cumulative)
+st.subheader("Cumulative Upload Count by Zone (Bar Chart)")
 st.bar_chart(final_summary.set_index('Zone')[['Total Meters Patched']])
+
+# Bar Chart for Meters Pending by Zone
+st.subheader("Meters Pending by Zone (Bar Chart)")
 st.bar_chart(final_summary.set_index('Zone')[['Meters Pending']])
+
+# Bar Chart for Meters Patched Today by Zone
+st.subheader("Meters Patched Today (Bar Chart)")
 st.bar_chart(final_summary.set_index('Zone')[['Meters Patched Today']])
