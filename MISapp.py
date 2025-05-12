@@ -50,7 +50,7 @@ with col2:
     st.markdown(f"#### 🕒 *As of {datetime.now().strftime('%d-%m-%Y')}*")
 
 # Show styled table with center alignment
-# Styled HTML table with center-aligned content
+
 st.markdown("""
     <style>
         table {
@@ -69,6 +69,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.markdown(final_summary.to_html(index=False, escape=False), unsafe_allow_html=True)
+
 
 
 # Charts section
