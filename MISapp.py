@@ -71,46 +71,6 @@ st.markdown("""
 
 st.markdown(final_summary.to_html(index=False, escape=False), unsafe_allow_html=True)
 
-# Generate downloadable image of MIS summary
-import io
-from PIL import Image, ImageDraw, ImageFont
-
-def create_image_from_summary(df):
-    font = ImageFont.load_default()
-    row_height = 30
-    table_width = 1000
-    table_height = (len(df) + 2) * row_height
-    img = Image.new('RGB', (table_width, table_height), 'white')
-    draw = ImageDraw.Draw(img)
-    headers = list(df.columns)
-    col_width = table_width // len(headers)
-
-    # Draw headers
-    for i, header in enumerate(headers):
-        draw.rectangle([(i * col_width, 10), ((i + 1) * col_width, 10 + row_height)], outline="black", width=1)
-        draw.text((i * col_width + 5, 15), header, font=font, fill="black")
-
-    # Draw data rows
-    for row_idx, row in df.iterrows():
-        for col_idx, item in enumerate(row):
-            y = 10 + (row_idx + 1) * row_height
-            draw.rectangle([(col_idx * col_width, y), ((col_idx + 1) * col_width, y + row_height)], outline="black", width=1)
-            draw.text((col_idx * col_width + 5, y + 5), str(item), font=font, fill="black")
-
-    buf = io.BytesIO()
-    img.save(buf, format="PNG")
-    buf.seek(0)
-    return buf
-
-# Create image and download button
-image_buf = create_image_from_summary(final_summary)
-
-st.download_button(
-    label="📥 Download MIS Summary as Image",
-    data=image_buf,
-    file_name=f"MIS_Summary_{datetime.now().strftime('%Y%m%d')}.png",
-    mime="image/png"
-)
 
 
 # Charts section
