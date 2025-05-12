@@ -4,8 +4,9 @@ import gspread
 from google.oauth2.service_account import Credentials
 from gspread_dataframe import get_as_dataframe
 from datetime import datetime
+from PIL import Image, ImageDraw, ImageFont
+import io
 
-# Streamlit page configuration
 st.set_page_config(page_title="Meter Patch MIS", layout="wide")
 st.title("📊 Meter Patch Daily MIS Dashboard")
 
@@ -22,48 +23,88 @@ spreadsheet = gc.open_by_url(sheet_url)
 df_daily = get_as_dataframe(spreadsheet.worksheet("Daily Data Entry")).dropna(subset=["Date"])
 df_alloc = get_as_dataframe(spreadsheet.worksheet("Total Meter Allocation per Zone")).dropna()
 
-# Clean up
-df_daily['Date'] = pd.to_datetime(df_daily['Date'])
+# Clean and format
+df_daily['Date'] = pd.to_datetime(df_daily['Date']).dt.normalize()
 df_daily['Meters Patched'] = pd.to_numeric(df_daily['Meters Patched'])
 df_alloc['Total Meters Assigned'] = pd.to_numeric(df_alloc['Total Meters Assigned'])
 
-# Cumulative patched
+# Cumulative patched per zone
 patched = df_daily.groupby('Zone')['Meters Patched'].sum().reset_index()
 patched.columns = ['Zone', 'Total Meters Patched']
 
-# Merge with allocation
+# Merge allocation + patched
 summary = pd.merge(df_alloc, patched, on='Zone', how='left').fillna(0)
 summary['Meters Pending'] = summary['Total Meters Assigned'] - summary['Total Meters Patched']
 
-# Today’s data
+# Today's data
 today = pd.Timestamp.now().normalize()
 patched_today = df_daily[df_daily['Date'] == today].groupby('Zone')['Meters Patched'].sum().reset_index()
 patched_today.columns = ['Zone', 'Meters Patched Today']
 
-# Merge to final
+# Final summary
 final_summary = pd.merge(summary, patched_today, on='Zone', how='left').fillna(0)
 
-# Display MIS Summary with current timestamp
-current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-st.markdown(f"### MIS Summary (as of {current_time})")
-st.dataframe(final_summary.style.set_properties(**{'text-align': 'center'}))
+# Display MIS Summary with timestamp
+col1, col2 = st.columns([3, 1])
+with col1:
+    st.markdown("### 📋 **MIS Summary**")
+with col2:
+    st.markdown(f"#### 🕒 *As of {datetime.now().strftime('%d-%m-%Y')}*")
 
-# --- Progress Charts ---
-st.subheader("📈 Progress Charts")
+# Show styled table with center alignment
+st.markdown("""
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: Arial, sans-serif;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+        }
+    </style>
+""", unsafe_allow_html=True)
 
-# Line Chart for Total Meters Patched (Cumulative count of all zones)
-df_cumulative = df_daily.groupby('Date')['Meters Patched'].sum().reset_index()
-df_cumulative['Date'] = df_cumulative['Date'].dt.date  # Strip time part to show only date
-st.line_chart(df_cumulative.set_index('Date')['Meters Patched'])
+st.markdown(final_summary.to_html(index=False, escape=False), unsafe_allow_html=True)
 
-# Bar Chart for Total Meters Patched by Zone (Cumulative)
-st.subheader("Cumulative Upload Count by Zone (Bar Chart)")
-st.bar_chart(final_summary.set_index('Zone')[['Total Meters Patched']])
+# Function to create an image of the MIS summary
+def create_image_from_summary(summary_df):
+    # Initialize Pillow Image
+    img = Image.new('RGB', (1200, 800), color=(255, 255, 255))
+    draw = ImageDraw.Draw(img)
 
-# Bar Chart for Meters Pending by Zone
-st.subheader("Meters Pending by Zone (Bar Chart)")
-st.bar_chart(final_summary.set_index('Zone')[['Meters Pending']])
+    # Set font
+    font = ImageFont.load_default()
 
-# Bar Chart for Meters Patched Today by Zone
-st.subheader("Meters Patched Today (Bar Chart)")
-st.bar_chart(final_summary.set_index('Zone')[['Meters Patched Today']])
+    # Title Text
+    title_text = "MIS Summary as of " + datetime.now().strftime('%d-%m-%Y')
+    draw.text((20, 20), title_text, font=font, fill=(0, 0, 0))
+
+    # Render the table data (simplified version as text)
+    text_data = summary_df.to_string(index=False)
+
+    # Adding table data below title (start at y=60 for some padding)
+    draw.text((20, 60), text_data, font=font, fill=(0, 0, 0))
+
+    # Save image in a buffer
+    img_buf = io.BytesIO()
+    img.save(img_buf, format="PNG")
+    img_buf.seek(0)
+    return img_buf
+
+# Create image from the final summary
+img_buf = create_image_from_summary(final_summary)
+
+# Add a download button for the image
+st.download_button(
+    label="Download MIS Summary as Image",
+    data=img_buf,
+    file_name="mis_summary.png",
+    mime="image/png"
+)
