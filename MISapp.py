@@ -82,20 +82,18 @@ line_chart_data = daily_total.set_index('Date')
 
 st.line_chart(line_chart_data)
 
-# 2. Bar charts for per-zone metrics (with legends on the left side)
+# 2. Bar charts for per-zone metrics (without "Meters Patched Today" section)
 fig, ax = plt.subplots(figsize=(8, 6))
 
 # Bar chart for Total Meters Patched
 ax.bar(final_summary['Zone'], final_summary['Total Meters Patched'], label='Total Meters Patched', color='skyblue')
 # Bar chart for Meters Pending
 ax.bar(final_summary['Zone'], final_summary['Meters Pending'], bottom=final_summary['Total Meters Patched'], label='Meters Pending', color='lightcoral')
-# Bar chart for Meters Patched Today
-ax.bar(final_summary['Zone'], final_summary['Meters Patched Today'], bottom=final_summary['Total Meters Patched'] + final_summary['Meters Pending'], label='Meters Patched Today', color='lightgreen')
 
 # Add labels and title
 ax.set_xlabel('Zone')
 ax.set_ylabel('Meters Count')
-ax.set_title('Meters Patched vs Pending vs Patched Today by Zone')
+ax.set_title('Meters Patched vs Pending by Zone')
 
 # Add legend to the left of the bar chart
 ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
