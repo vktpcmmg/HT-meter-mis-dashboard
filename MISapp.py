@@ -150,20 +150,20 @@ def save_summary_as_image(df):
     fig, ax = plt.subplots(figsize=(fig_width, fig_height), dpi=150)
     ax.axis('off')
 
-    # Create table
+    # Create table with wrapped column labels
     table = ax.table(
         cellText=df.values,
-        colLabels=df.columns,
+        colLabels=[label.replace(" ", "\n") for label in df.columns],  # wrap headers
         cellLoc='center',
         loc='center',
         edges='closed'
     )
 
     table.auto_set_font_size(False)
-    table.set_fontsize(12)  # Readable font
-    table.scale(1.0, 2.0)   # Keep columns compact (1.0), rows tall (2.0)
+    table.set_fontsize(12)
+    table.scale(1.0, 2.0)  # Columns normal, rows taller
 
-    # Style headers and borders
+    # Style cells
     for (row, col), cell in table.get_celld().items():
         cell.set_edgecolor('black')
         cell.set_linewidth(1)
@@ -172,12 +172,12 @@ def save_summary_as_image(df):
             cell.get_text().set_fontweight('bold')
             cell.set_facecolor('#f0f0f0')
 
-    # Save to buffer
     buf = io.BytesIO()
     plt.savefig(buf, format="png", bbox_inches='tight', dpi=150)
     buf.seek(0)
     plt.close(fig)
     return buf
+
 
 
 
