@@ -1,4 +1,5 @@
-pip install pillow
+pip install pillow streamlit pandas gspread
+
 import streamlit as st
 import pandas as pd
 import gspread
@@ -76,22 +77,22 @@ st.markdown(final_summary.to_html(index=False, escape=False), unsafe_allow_html=
 
 # Function to create an image of the MIS summary
 def create_image_from_summary(summary_df):
-    # Convert dataframe to HTML
-    html_content = summary_df.to_html(index=False)
-
     # Initialize Pillow Image
-    width, height = 800, 600
-    img = Image.new("RGB", (width, height), color=(255, 255, 255))
+    img = Image.new('RGB', (1200, 800), color=(255, 255, 255))
     draw = ImageDraw.Draw(img)
 
-    # Adding basic font (You can specify any available font)
+    # Set font
     font = ImageFont.load_default()
 
-    # Write the HTML content into the image (simplified for now)
-    text = html_content.replace("<td>", " ").replace("</td>", " ").replace("<tr>", "").replace("</tr>", "\n")
-    
-    # Draw the text
-    draw.text((10, 10), text, font=font, fill="black")
+    # Title Text
+    title_text = "MIS Summary as of " + datetime.now().strftime('%d-%m-%Y')
+    draw.text((20, 20), title_text, font=font, fill=(0, 0, 0))
+
+    # Render the table data (simplified version as text)
+    text_data = summary_df.to_string(index=False)
+
+    # Adding table data below title (start at y=60 for some padding)
+    draw.text((20, 60), text_data, font=font, fill=(0, 0, 0))
 
     # Save image in a buffer
     img_buf = io.BytesIO()
@@ -109,4 +110,3 @@ st.download_button(
     file_name="mis_summary.png",
     mime="image/png"
 )
-
