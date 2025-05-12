@@ -46,24 +46,7 @@ final_summary = pd.merge(summary, patched_today, on='Zone', how='left').fillna(0
 # Display MIS Summary with current timestamp
 current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 st.markdown(f"### MIS Summary (as of {current_time})")
-
-# Convert to HTML for proper centering
-html_table = final_summary.to_html(index=False, escape=False)
-
-# Apply custom CSS to center the text in the table
-st.markdown(f"""
-    <style>
-        .dataframe td, .dataframe th {{
-            text-align: center;
-            vertical-align: middle;
-        }}
-        .dataframe {{
-            width: 100%;
-            margin: 0;
-        }}
-    </style>
-    {html_table}
-""", unsafe_allow_html=True)
+st.dataframe(final_summary.style.set_properties(**{'text-align': 'center'}))
 
 # --- Progress Charts ---
 st.subheader("📈 Progress Charts")
