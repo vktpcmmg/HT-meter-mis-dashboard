@@ -136,45 +136,53 @@ ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 # Display the chart
 st.pyplot(fig)
 
-from io import BytesIO
+# ---------- Place this just after final_summary is created ----------
+import matplotlib.pyplot as plt
+import io
 
-# Function to convert DataFrame to styled image
 def save_summary_as_image(df):
-    import matplotlib.pyplot as plt
+    rows, cols = df.shape
+    col_width = 2  # Width per column (in inches)
+    row_height = 0.5  # Height per row (in inches)
+    fig_width = max(8, col_width * cols)
+    fig_height = max(2, row_height * (rows + 1))
 
-    fig, ax = plt.subplots(figsize=(8, 0.5 + 0.4 * len(df)))
+    fig, ax = plt.subplots(figsize=(fig_width, fig_height))
     ax.axis('off')
 
     # Create table
     table = ax.table(cellText=df.values,
                      colLabels=df.columns,
                      cellLoc='center',
-                     loc='center')
+                     loc='center',
+                     edges='closed')
 
+    # Styling
     table.auto_set_font_size(False)
     table.set_fontsize(10)
+    table.scale(1, 1.5)
 
-    # Bold headers and center-align all cells
+    # Bold header and center align
     for (row, col), cell in table.get_celld().items():
-        cell.set_height(0.4)
-        cell.set_fontsize(10)
+        cell.set_edgecolor('black')
+        cell.set_linewidth(1)
         cell.set_text_props(ha='center', va='center')
         if row == 0:
-            cell.set_text_props(weight='bold')  # Bold header
-        cell.set_linewidth(0.5)  # Border
+            cell.set_fontweight('bold')
+            cell.set_facecolor('#f0f0f0')
 
-    fig.tight_layout()
-    buf = BytesIO()
-    fig.savefig(buf, format="png", dpi=150)
+    # Save to buffer
+    buf = io.BytesIO()
+    plt.savefig(buf, format="png", bbox_inches='tight')
     buf.seek(0)
     return buf
 
-# Generate and show download button
-img_buf = save_summary_as_image(final_summary)
+# ---------- Add this where you want the download button to appear, below the table ----------
+image_buf = save_summary_as_image(final_summary)
+
 st.download_button(
     label="📥 Download MIS Summary as Image",
-    data=img_buf,
-    file_name=f"MIS_Summary_{datetime.now().strftime('%d-%m-%Y')}.png",
+    data=image_buf,
+    file_name=f"MIS_Summary_{datetime.now().strftime('%Y%m%d')}.png",
     mime="image/png"
 )
-
