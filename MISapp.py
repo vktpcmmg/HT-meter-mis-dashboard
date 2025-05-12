@@ -47,7 +47,7 @@ col1, col2 = st.columns([3, 1])
 with col1:
     st.markdown("### 📋 **MIS Summary**")
 with col2:
-    st.markdown(f"#### 🕒 *As of {datetime.now().strftime('%d-%m-%Y %H:%M:%S')}*")
+    st.markdown(f"#### 🕒 *As of {datetime.now().strftime('%d-%m-%Y')}*")
 
 # Show styled table with center alignment
 # Styled HTML table with center-aligned content
