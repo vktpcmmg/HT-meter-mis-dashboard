@@ -4,9 +4,8 @@ import gspread
 from google.oauth2.service_account import Credentials
 from gspread_dataframe import get_as_dataframe
 from datetime import datetime
-from weasyprint import HTML
-import io
-
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 st.set_page_config(page_title="Meter Patch MIS", layout="wide")
 st.title("📊 Meter Patch Daily MIS Dashboard")
 
@@ -57,69 +56,80 @@ st.markdown("""
         table {
             width: 100%;
             border-collapse: collapse;
-            font-family: Arial, sans-serif;
         }
         th, td {
-            border: 1px solid black;
-            padding: 8px;
             text-align: center;
+            padding: 8px;
         }
         th {
             background-color: #f0f0f0;
             font-weight: bold;
+            text-align: center !important;
         }
     </style>
 """, unsafe_allow_html=True)
 
 st.markdown(final_summary.to_html(index=False, escape=False), unsafe_allow_html=True)
 
-# MIS summary table as HTML
-html_content = final_summary.to_html(index=False, escape=False)
+# Charts section
+st.subheader("📈 Progress Charts")
 
-# Add CSS styling for the table (borders and bold header)
-styled_html = f"""
-    <html>
-        <head>
-            <style>
-                table {{
-                    width: 100%;
-                    border-collapse: collapse;
-                    font-family: Arial, sans-serif;
-                }}
-                th, td {{
-                    border: 1px solid black;
-                    padding: 8px;
-                    text-align: center;
-                }}
-                th {{
-                    background-color: #f0f0f0;
-                    font-weight: bold;
-                }}
-            </style>
-        </head>
-        <body>
-            <h3 style="text-align:center;">MIS Summary</h3>
-            {html_content}
-        </body>
-    </html>
-"""
+# 1. Line chart for total patched per day (all zones)
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 
-# Function to convert HTML to image
-def save_table_as_image(html_content):
-    # Use WeasyPrint to convert HTML to an image
-    html = HTML(string=html_content)
-    img = html.write_png()  # Saving the HTML table as PNG image
-    return img
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 
-# Convert the MIS summary table into an image
-img_buf = save_table_as_image(styled_html)
+# 1. Line chart for total patched per day (all zones)
+daily_total = df_daily.groupby('Date')['Meters Patched'].sum().reset_index()
+daily_total['Date'] = pd.to_datetime(daily_total['Date'])
 
-# Provide a download button for the image
-st.download_button(
-    label="Download MIS Summary as Image",
-    data=img_buf,
-    file_name="mis_summary.png",
-    mime="image/png"
-)
+# Line chart data
+# 1. Line chart for cumulative patched per day (all zones)
+daily_total = df_daily.groupby('Date')['Meters Patched'].sum().reset_index()
+daily_total['Date'] = pd.to_datetime(daily_total['Date'])
 
-# Optionally, you can add any further logic to handle charts or additional features as needed
+# Calculate cumulative sum of meters patched over time
+daily_total['Cumulative Meters Patched'] = daily_total['Meters Patched'].cumsum()
+
+# Line chart data
+line_chart_data = daily_total.set_index('Date')
+
+# Create a smaller figure using matplotlib for custom formatting
+fig, ax = plt.subplots(figsize=(6, 2))  # You can adjust the width and height here
+
+ax.plot(line_chart_data.index, line_chart_data['Cumulative Meters Patched'], color='b', label='Cumulative Meters Patched')
+
+# Format the x-axis to show only the date (without time)
+ax.xaxis.set_major_formatter(mdates.DateFormatter('%d-%m-%Y'))
+plt.xticks(rotation=45)  # Rotate the x-axis labels for better readability
+
+# Set labels and title
+ax.set_xlabel('Date')
+ax.set_ylabel('Cumulative Meters Patched')
+ax.set_title('Cumulative Meters Patched Per Day')
+
+# Display the plot
+st.pyplot(fig)
+
+
+
+# 2. Bar charts for per-zone metrics (without "Meters Patched Today" section)
+fig, ax = plt.subplots(figsize=(8, 4))
+
+# Bar chart for Total Meters Patched
+ax.bar(final_summary['Zone'], final_summary['Total Meters Patched'], label='Total Meters Patched', color='skyblue')
+# Bar chart for Meters Pending
+ax.bar(final_summary['Zone'], final_summary['Meters Pending'], bottom=final_summary['Total Meters Patched'], label='Meters Pending', color='lightcoral')
+
+# Add labels and title
+ax.set_xlabel('Zone')
+ax.set_ylabel('Meters Count')
+ax.set_title('Meters Patched vs Pending by Zone')
+
+# Add legend to the left of the bar chart
+ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+
+# Display the chart
+st.pyplot(fig)
