@@ -5,7 +5,7 @@ from google.oauth2.service_account import Credentials
 from gspread_dataframe import get_as_dataframe
 from datetime import datetime
 import matplotlib.pyplot as plt
-
+import matplotlib.dates as mdates
 st.set_page_config(page_title="Meter Patch MIS", layout="wide")
 st.title("📊 Meter Patch Daily MIS Dashboard")
 
@@ -75,12 +75,33 @@ st.markdown(final_summary.to_html(index=False, escape=False), unsafe_allow_html=
 st.subheader("📈 Progress Charts")
 
 # 1. Line chart for total patched per day (all zones)
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
+
+# 1. Line chart for total patched per day (all zones)
 daily_total = df_daily.groupby('Date')['Meters Patched'].sum().reset_index()
 daily_total['Date'] = pd.to_datetime(daily_total['Date'])
 
+# Line chart data
 line_chart_data = daily_total.set_index('Date')
 
-st.line_chart(line_chart_data)
+# Create a figure and axis using matplotlib for custom formatting
+fig, ax = plt.subplots()
+
+ax.plot(line_chart_data.index, line_chart_data['Meters Patched'])
+
+# Format the x-axis to show only the date (without time)
+ax.xaxis.set_major_formatter(mdates.DateFormatter('%d-%m-%Y'))
+plt.xticks(rotation=45)  # Rotate the x-axis labels for better readability
+
+# Set labels and title
+ax.set_xlabel('Date')
+ax.set_ylabel('Meters Patched')
+ax.set_title('Total Meters Patched Per Day')
+
+# Display the plot
+st.pyplot(fig)
+
 
 # 2. Bar charts for per-zone metrics (without "Meters Patched Today" section)
 fig, ax = plt.subplots(figsize=(8, 6))
