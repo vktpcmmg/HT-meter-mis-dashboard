@@ -142,15 +142,15 @@ import io
 
 def save_summary_as_image(df):
     rows, cols = df.shape
-    col_width = max(4, 8 // len(df.columns))  # Increase column width dynamically
-    row_height = 0.8  # Increase row height to give more space
-    fig_width = max(10, col_width * cols)  # Adjust figure width
-    fig_height = max(3, row_height * (rows + 1))  # Adjust figure height
+    col_width = 3  # Increase column width
+    row_height = 0.6
+    fig_width = max(8, col_width * cols)
+    fig_height = max(2, row_height * (rows + 1))
 
     fig, ax = plt.subplots(figsize=(fig_width, fig_height))
     ax.axis('off')
 
-    # Create table with the cell text centered and dynamic width
+    # Create table
     table = ax.table(
         cellText=df.values,
         colLabels=df.columns,
@@ -159,26 +159,26 @@ def save_summary_as_image(df):
         edges='closed'
     )
 
-    # Set the font size larger
     table.auto_set_font_size(False)
-    table.set_fontsize(14)  # Increased font size
-    table.scale(1.5, 1.5)   # Adjust cell scaling for better spacing
+    table.set_fontsize(11)  # slightly larger font
+    table.scale(1.2, 1.5)   # widen the cells a bit more
 
-    # Style headers and cells
+    # Style headers and borders
     for (row, col), cell in table.get_celld().items():
         cell.set_edgecolor('black')
         cell.set_linewidth(1)
-        cell.set_text_props(ha='center', va='center')  # Center align text
+        cell.set_text_props(ha='center', va='center')
         if row == 0:
-            cell.get_text().set_fontweight('bold')  # Bold the header
-            cell.set_facecolor('#f0f0f0')  # Light background for header
+            cell.get_text().set_fontweight('bold')
+            cell.set_facecolor('#f0f0f0')
 
     # Save image to buffer
     buf = io.BytesIO()
-    plt.savefig(buf, format="png", bbox_inches='tight', dpi=300)  # Use higher dpi for clarity
+    plt.savefig(buf, format="png", bbox_inches='tight')
     buf.seek(0)
     plt.close(fig)
     return buf
+
 
 
 
