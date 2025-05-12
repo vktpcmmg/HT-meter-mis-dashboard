@@ -166,7 +166,7 @@ def save_summary_as_image(df):
     # Style headers and borders
     for (row, col), cell in table.get_celld().items():
         cell.set_edgecolor('black')
-        cell.set_linewidth(1)
+        cell.set_linewidth(1.5)
         cell.set_text_props(ha='center', va='center')
         if row == 0:
             cell.get_text().set_fontweight('bold')
